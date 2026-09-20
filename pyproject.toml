@@ -1,0 +1,19 @@
+[project]
+name = "solguard"
+version = "0.1.0"
+description = "Solana token due-diligence agent: on-chain rug checks + market depth"
+requires-python = ">=3.10"
+dependencies = [
+    "solders>=0.18",
+    "solana>=0.29",
+]
+
+[project.scripts]
+solguard = "solguard.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

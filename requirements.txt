@@ -1,0 +1,2 @@
+solders>=0.18
+solana>=0.29
