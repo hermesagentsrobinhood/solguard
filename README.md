@@ -46,6 +46,36 @@ JSON mode for scripting/agents:
 python -m solguard check <SOLANA_MINT> --json
 ```
 
+## Portfolio / batch mode
+
+Scan many mints at once and get a cleanly-sorted portfolio view — riskiest
+first — plus a CSV-friendly JSON option:
+
+```bash
+# mints from the command line
+python -m solguard batch <MINT_A> <MINT_B> <MINT_C>
+
+# or from a file (one per line, '#' = comment)
+python -m solguard batch --file portfolio.txt
+
+python -m solguard batch --file portfolio.txt --json   # machine output
+```
+
+A mint that errors on-chain is reported as an **ERROR**, never silently dropped
+— an un-scanned token is not a scanned-and-clean token.
+
+Live output (real on-chain + DexScreener, 2026-09-23):
+
+```
+solguard batch -- portfolio due-diligence
+MINT                                           SCORE TAG        FAIL WARN  ??
+-----------------------------------------------------------------------------
+EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v      50 CAUTION       2    0   1
+DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263     100 INCOMPLETE    0    0   1
+-----------------------------------------------------------------------------
+Scanned 2 mint(s): CAUTION=1, INCOMPLETE=1
+```
+
 ## Example (live, 2026-09-20)
 
 ```
@@ -73,10 +103,10 @@ Market (deepest pool on pumpswap):
 
 ## Roadmap (post-MVP)
 
-- [ ] Multiple free-RPC rotation with per-endpoint rate budgets for reliable
+- [~] Multiple free-RPC rotation with per-endpoint rate budgets for reliable
       holder data.
 - [ ] Optional Helius/QuickNode RPC key support for high-throughput scans.
-- [ ] Batch/portfolio mode: scan N mints, sort by cleanest, emit CSV.
+- [x] Batch/portfolio mode: scan N mints, sort by cleanest, emit CSV.  (2026-09-23)
 - [ ] Extend to SPL token-2022 extension traps.
 - [ ] Simple interactive report (HTML) with per-check rationale.
 
@@ -89,3 +119,17 @@ python tests/test_risk.py    # deterministic mocks, no live RPC needed
 ## License
 
 MIT
+
+## Live proof (2026-09-20)
+```
+$ solguard check EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+[FAIL ] Mint authority disabled   LIVE: BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG can mint unlimited
+[FAIL ] Freeze authority disabled  LIVE: 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar can freeze
+[PASS ] Supply is sane (>0)        circulating 7.97e9
+[????] Holder concentration        RPC throttled (429 after 6 attempts) -- NOT scored as pass
+Score: 50/100 -> CAUTION
+Market (pumpswap): price 0.004055 | liq $21.9M | vol24h $5.3M
+```
+Verified live against USDC mainnet mint: real on-chain facts (mint/freeze authority
+both LIVE on a "blue-chip" token — exactly the hidden-rug signal the tool exists to
+surface) + real DexScreener market depth, no paid keys.

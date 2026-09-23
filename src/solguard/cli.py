@@ -16,6 +16,7 @@ import sys
 from .chain import RpcError
 from .market import best_solana_pair
 from .risk import run_rug_checks
+from .summarize import render_table, summarize
 
 
 def render_checks(checks: list[dict]) -> str:
@@ -69,6 +70,42 @@ def cmd_check(args) -> int:
     return 0
 
 
+def cmd_batch(args) -> int:
+    """Run due-diligence on many mints and summarise as a portfolio view.
+
+    Mints come from positional args and/or --file (one mint per line).
+    A mint that errors on-chain is reported as ERROR rather than silently
+    dropped -- an un-scanned token is not a scanned-and-clean token.
+    """
+    mints = list(args.mints)
+    if args.file:
+        with open(args.file) as fh:
+            mints += [ln.strip() for ln in fh if ln.strip() and not ln.startswith("#")]
+
+    risks = []
+    errors = []
+    for mint in mints:
+        try:
+            risk = run_rug_checks(mint, args.rpc)
+            risk["mint_addr"] = mint
+            risks.append(risk)
+        except (RpcError, ValueError) as e:
+            errors.append({"mint": mint, "error": str(e)})
+
+    summary = summarize(risks)
+    if args.json:
+        print(json.dumps({"summary": summary, "errors": errors}, indent=2))
+        return 0
+
+    print("solguard batch -- portfolio due-diligence\n")
+    print(render_table(summary))
+    if errors:
+        print("\nErrors (not scored):")
+        for e in errors:
+            print(f"  {e['mint']}: {e['error']}")
+    return 0
+
+
 def main() -> int:
     p = argparse.ArgumentParser(prog="solguard", description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -77,6 +114,12 @@ def main() -> int:
     c.add_argument("--rpc", default=None, help="override RPC URL")
     c.add_argument("--json", action="store_true", help="emit JSON")
     c.set_defaults(fn=cmd_check)
+    b = sub.add_parser("batch", help="run due-diligence on many mints (portfolio view)")
+    b.add_argument("mints", nargs="*", help="one or more mint addresses")
+    b.add_argument("--file", default=None, help="file of mints, one per line (# = comment)")
+    b.add_argument("--rpc", default=None, help="override RPC URL")
+    b.add_argument("--json", action="store_true", help="emit JSON")
+    b.set_defaults(fn=cmd_batch)
     ns = p.parse_args()
     return ns.fn(ns)
 
