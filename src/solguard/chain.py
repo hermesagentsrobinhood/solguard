@@ -7,6 +7,7 @@ whether a position can trap you -- not venue risk badges.
 """
 from __future__ import annotations
 
+import base64
 import json
 import time
 import urllib.error
@@ -14,7 +15,12 @@ import urllib.request
 
 from solders.pubkey import Pubkey
 
+from . import token2022
+
 PUBLIC_RPC = "https://api.mainnet-beta.solana.com"
+
+TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
 
 # Free-tier public RPCs throttle holder/circulation queries. The only reliably
 # working public endpoint is api.mainnet-beta.solana.com; retry it with backoff.
@@ -60,6 +66,50 @@ def parse_pubkey(addr: str) -> Pubkey:
         raise ValueError(f"Invalid Solana address: {addr!r}") from e
 
 
+def _rpc_base64(mint: str, url: str = PUBLIC_RPC) -> bytes:
+    """Fetch a mint account's RAW bytes (base64 encoding) for extension parsing."""
+    body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "getAccountInfo",
+                       "params": [mint, {"encoding": "base64"}]}).encode()
+    req = urllib.request.Request(PUBLIC_RPC if url == PUBLIC_RPC else url, data=body,
+                                 headers={"Content-Type": "application/json"})
+    last_err = None
+    for attempt in range(MAX_RETRIES):
+        try:
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                data = json.loads(resp.read().decode())
+            if "error" in data:
+                raise RpcError(f"getAccountInfo(base64): {data['error']}")
+            value = data.get("result", {}).get("value")
+            if not value:
+                return b""
+            enc = value.get("data")
+            b64 = enc[0] if isinstance(enc, list) else enc
+            return base64.b64decode(b64)
+        except urllib.error.HTTPError as e:
+            last_err = e
+            backoff = 1.0 * (2 ** attempt) + 0.5
+            if e.code in (429, 403, 500, 502, 503, 504):
+                time.sleep(backoff)
+                continue
+            raise
+    raise RpcError(f"getAccountInfo(base64) failed after {MAX_RETRIES} attempts: {last_err}")
+
+
+def _decoded_extensions(mint: str, url: str) -> list[dict] | None:
+    """Return decoded Token-2022 extensions for a mint, or None if unreadable.
+
+    Only meaningful for Token-2022 mints; non-Token-2022 mints have no
+    extension section and caller should pass is_token2022=False.
+    """
+    try:
+        raw = _rpc_base64(mint, url)
+        if not raw:
+            return []
+        return token2022.decode_extensions(raw)
+    except (token2022.ExtensionDecodeError, RpcError, urllib.error.URLError):
+        return None
+
+
 def mint_info(mint: str, url: str = PUBLIC_RPC) -> dict:
     """Return parsed mint-account facts: mint/freeze authority, decimals, supply.
 
@@ -74,8 +124,17 @@ def mint_info(mint: str, url: str = PUBLIC_RPC) -> dict:
     info = (parsed or {}).get("value")
     if not info:
         raise RpcError(f"Account {mint} has no on-chain state (not a token / unlaunched).")
-    if info.get("owner") != "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA":
-        raise RpcError(f"{mint} is not an SPL token (owner={info.get('owner')}).")
+    owner = info.get("owner")
+    if owner == TOKEN_2022_PROGRAM_ID:
+        is_token2022 = True
+        token_program = "token-2022"
+        exts = _decoded_extensions(str(pk), url)
+    elif owner == TOKEN_PROGRAM_ID:
+        is_token2022 = False
+        token_program = "spl"
+        exts = []
+    else:
+        raise RpcError(f"{mint} is not an SPL/Token-2022 token (owner={owner}).")
     parsed_data = info["data"]["parsed"]["info"]
     mint_authority = parsed_data.get("mintAuthority")
     freeze_authority = parsed_data.get("freezeAuthority")
@@ -88,6 +147,9 @@ def mint_info(mint: str, url: str = PUBLIC_RPC) -> dict:
         "freeze_authority": freeze_authority,
         "mint_authority_live": mint_authority is not None,
         "freeze_authority_live": freeze_authority is not None,
+        "token_program": token_program,
+        "is_token2022": is_token2022,
+        "token2022_exts": exts,
     }
 
 

@@ -24,6 +24,27 @@ chain:
 | Supply sanity | `getTokenSupply` | Supply must decode to something sane (> 0). |
 | Holder concentration | `getTokenLargestAccounts` | Top-10 % of supply; extreme concentration risks a coordinated dump. |
 
+### Token-2022 (Token Extensions) traps
+
+Token-2022 lets a deployer attach **extensions** to a mint that can trap you
+*after* you buy — a layer the classic SPL checks and most "token safety"
+screens never look at. `solguard` decodes the raw on-chain extension section
+and names the trap:
+
+| Extension | What it does |
+|-----------|--------------|
+| **Non-Transferable** | The token **cannot be sold at all** — you can be stuck forever (hard FAIL). |
+| **Permanent Delegate** | A delegate authority can **seize or burn any holder's tokens** (backdoor, hard FAIL). |
+| **Transfer Fee** | Every transfer — including **your sell** — is taxed to the deployer, and the fee can be raised after you buy. |
+| **Transfer Hook** | Every transfer is routed through an external program that can **censor / redirect your exit**. |
+| **Pausable** | An authority can **pause transfers/mint/burn** at any time. |
+| **Mint Close Authority** | An authority can **close/burn the mint** and destroy supply. |
+| **Default Account State = Frozen** | New accounts start **frozen** and cannot trade. |
+
+`solguard` distinguishes SPL from Token-2022 mints on-chain (by account owner)
+and only decodes extensions on real Token-2022 mints. A check it cannot decode
+is reported `????`, never guessed.
+
 `solguard` reports exactly these, and it reports honestly: a check it **cannot
 verify** is marked `????` and is **never counted as passed**. It deliberately
 does *not* rank venue risk badges — they're one more unverified claim.
@@ -107,13 +128,18 @@ Market (deepest pool on pumpswap):
       holder data.
 - [ ] Optional Helius/QuickNode RPC key support for high-throughput scans.
 - [x] Batch/portfolio mode: scan N mints, sort by cleanest, emit CSV.  (2026-09-23)
-- [ ] Extend to SPL token-2022 extension traps.
+- [x] SPL Token-2022 extension-trap detection (transfer fee, permanent delegate,
+      transfer hook, non-transferable, pausable, mint-close, frozen-default).
+      Proven by 13 unit tests against spec-built buffers + 153 live Token-2022
+      mints scanned with zero false positives.  (2026-09-24)
 - [ ] Simple interactive report (HTML) with per-check rationale.
 
 ## Test
 
 ```bash
-python tests/test_risk.py    # deterministic mocks, no live RPC needed
+python tests/test_risk.py      # base checks + scoring (3)
+python tests/test_summarize.py # portfolio summariser (3)
+python tests/test_token2022.py # Token-2022 extension decoder (13)
 ```
 
 ## License

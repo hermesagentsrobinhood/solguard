@@ -11,6 +11,7 @@ the primary output; the single number is a convenience summary.
 from __future__ import annotations
 
 from .chain import RpcError, mint_info, top_holders, token_supply
+from . import token2022
 
 # Freeze threshold: a token this concentrated in wallets risks dump & rug.
 TOP10_CONCERN_PCT = 30.0
@@ -91,6 +92,35 @@ def run_rug_checks(mint: str, rpc_url: str | None = None) -> dict:
     failed = sum(1 for c in checks if c["pass"] is False)
     warned = sum(1 for c in checks if c["pass"] is None and not c.get("unknown"))
     unknown = sum(1 for c in checks if c.get("unknown"))
+
+    # Token-2022 extension traps (transfer fee on exit, permanent delegate,
+    # non-transferable, transfer hook, pausable, mint-close, frozen-by-default).
+    if info.get("is_token2022", False):
+        exts = info.get("token2022_exts")
+        if exts is None:
+            checks.append({
+                "id": "token2022_extensions",
+                "label": "Token-2022 extension scan",
+                "pass": None,
+                "unknown": True,
+                "detail": "could not decode Token-2022 extension section (RPC). "
+                          "Permanent-delegate / transfer-fee traps NOT checked.",
+            })
+        else:
+            ext_checks = token2022.extension_checks(exts)
+            if not ext_checks:
+                ext_checks = [{
+                    "id": "token2022_no_traps",
+                    "label": "No Token-2022 extension traps",
+                    "pass": True,
+                    "detail": "no dangerous mint extensions detected (transfer "
+                              "fee, permanent delegate, transfer hook, "
+                              "non-transferable, pausable, mint-close).",
+                }]
+            checks.extend(ext_checks)
+        failed = sum(1 for c in checks if c["pass"] is False)
+        warned = sum(1 for c in checks if c["pass"] is None and not c.get("unknown"))
+        unknown = sum(1 for c in checks if c.get("unknown"))
 
     # Simple score: each FAIL -25, each WARN -10, base 100, floor 0. UNKNOWN
     # does not lower the score but is surfaced so the reader knows the picture
