@@ -13,7 +13,7 @@ import argparse
 import json
 import sys
 
-from .chain import RpcError
+from .chain import RpcError, resolve_rpc
 from .market import best_solana_pair
 from .risk import run_rug_checks
 from .summarize import render_table, summarize
@@ -121,6 +121,7 @@ def main() -> int:
     b.add_argument("--json", action="store_true", help="emit JSON")
     b.set_defaults(fn=cmd_batch)
     ns = p.parse_args()
+    ns.rpc = resolve_rpc(ns.rpc)
     return ns.fn(ns)
 
 

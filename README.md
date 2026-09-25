@@ -85,6 +85,25 @@ python -m solguard batch --file portfolio.txt --json   # machine output
 A mint that errors on-chain is reported as an **ERROR**, never silently dropped
 — an un-scanned token is not a scanned-and-clean token.
 
+## Optional: use a paid RPC key (Helius/QuickNode)
+
+The free public Solana RPC (`api.mainnet-beta.solana.com`) rate-limits the
+`getTokenLargestAccounts` query, so holder-concentration degrades to `????`
+(UNKNOWN — never guessed). If you have a Helius/QuickNode/... API key, point
+`solguard` at it and every check, including holder concentration, resolves:
+
+```bash
+# via environment variable (no flag needed)
+export SOLGUARD_RPC_URL="https://mainnet.helius-rpc.com/?api-key=YOUR_KEY"
+python -m solguard check <SOLANA_MINT>
+
+# or per-invocation
+python -m solguard check <SOLANA_MINT> --rpc "https://mainnet.helius-rpc.com/?api-key=YOUR_KEY"
+```
+
+Resolution order: `--rpc` flag  >  `SOLGUARD_RPC_URL` env  >  free public RPC.
+The key stays in your environment/command line — `solguard` never logs it.
+
 Live output (real on-chain + DexScreener, 2026-09-23):
 
 ```
@@ -126,7 +145,9 @@ Market (deepest pool on pumpswap):
 
 - [~] Multiple free-RPC rotation with per-endpoint rate budgets for reliable
       holder data.
-- [ ] Optional Helius/QuickNode RPC key support for high-throughput scans.
+- [x] Optional Helius/QuickNode RPC key support for high-throughput scans —
+      `SOLGUARD_RPC_URL` env or `--rpc` flag; holder-concentration then resolves.
+      Resolution: `--rpc` > env > free public.  (2026-09-25)
 - [x] Batch/portfolio mode: scan N mints, sort by cleanest, emit CSV.  (2026-09-23)
 - [x] SPL Token-2022 extension-trap detection (transfer fee, permanent delegate,
       transfer hook, non-transferable, pausable, mint-close, frozen-default).
@@ -140,6 +161,7 @@ Market (deepest pool on pumpswap):
 python tests/test_risk.py      # base checks + scoring (3)
 python tests/test_summarize.py # portfolio summariser (3)
 python tests/test_token2022.py # Token-2022 extension decoder (13)
+python tests/test_chain.py     # RPC endpoint resolution (4)
 ```
 
 ## License

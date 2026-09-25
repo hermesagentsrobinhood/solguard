@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 import time
 import urllib.error
 import urllib.request
@@ -18,6 +19,17 @@ from solders.pubkey import Pubkey
 from . import token2022
 
 PUBLIC_RPC = "https://api.mainnet-beta.solana.com"
+
+# Users with a paid RPC key (Helius/QuickNode/...) can set SOLGUARD_RPC_URL to
+# unthrottle the holder-concentration query. Resolution order:
+#   explicit --rpc arg  >  SOLGUARD_RPC_URL env  >  free public endpoint.
+def resolve_rpc(explicit: str | None = None) -> str:
+    if explicit:
+        return explicit
+    env = os.environ.get("SOLGUARD_RPC_URL")
+    if env:
+        return env
+    return PUBLIC_RPC
 
 TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
 TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
