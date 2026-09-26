@@ -153,7 +153,9 @@ Market (deepest pool on pumpswap):
       transfer hook, non-transferable, pausable, mint-close, frozen-default).
       Proven by 13 unit tests against spec-built buffers + 153 live Token-2022
       mints scanned with zero false positives.  (2026-09-24)
-- [ ] Simple interactive report (HTML) with per-check rationale.
+- [x] Self-contained HTML report (`solguard check <MINT> --html report.html`)
+      with per-check rationale, clean/warn/fail/? verdicts, market-depth block,
+      and an explicit "NOT scored as passed" banner for unverifiable checks.  (2026-09-26)
 
 ## Test
 

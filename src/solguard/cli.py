@@ -15,6 +15,7 @@ import sys
 
 from .chain import RpcError, resolve_rpc
 from .market import best_solana_pair
+from .report import render_html
 from .risk import run_rug_checks
 from .summarize import render_table, summarize
 
@@ -49,6 +50,12 @@ def cmd_check(args) -> int:
             out["market"] = market
         print(json.dumps(out, indent=2, default=str))
         return 0
+
+    if args.html:
+        html = render_html(risk, market=market, mint_addr=mint)
+        with open(args.html, "w") as fh:
+            fh.write(html)
+        print(f"Wrote HTML report -> {args.html}")
 
     print(f"solguard -- Solana due-diligence for {mint}\n")
     print(render_checks(risk["checks"]))
@@ -113,6 +120,8 @@ def main() -> int:
     c.add_argument("mint", help="Solana SPL token mint address")
     c.add_argument("--rpc", default=None, help="override RPC URL")
     c.add_argument("--json", action="store_true", help="emit JSON")
+    c.add_argument("--html", metavar="FILE", default=None,
+                   help="write a self-contained HTML report to FILE")
     c.set_defaults(fn=cmd_check)
     b = sub.add_parser("batch", help="run due-diligence on many mints (portfolio view)")
     b.add_argument("mints", nargs="*", help="one or more mint addresses")
