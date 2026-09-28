@@ -1,0 +1,28 @@
+{
+  "summary": {
+    "scanned": 2,
+    "by_tag": {
+      "CAUTION": 1,
+      "INCOMPLETE": 1
+    },
+    "rows": [
+      {
+        "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "score": 50,
+        "tag": "CAUTION",
+        "failed": 2,
+        "warned": 0,
+        "unknown": 1
+      },
+      {
+        "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+        "score": 100,
+        "tag": "INCOMPLETE",
+        "failed": 0,
+        "warned": 0,
+        "unknown": 1
+      }
+    ]
+  },
+  "errors": []
+}

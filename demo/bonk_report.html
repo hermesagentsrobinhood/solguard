@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>solguard due-diligence — DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263</title>
+<style>
+  :root { --ink:#d7dbe2; --muted:#9aa3b2; --bg:#0f1115; --card:#171a21;
+           --pass:#2ecc71; --warn:#f1c40f; --fail:#e74c3c; --unknown:#6b7280; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  .wrap { max-width:820px; margin:0 auto; padding:40px 22px 80px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .addr { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--muted);
+          font-size:13px; word-break:break-all; }
+  .score-row { display:flex; align-items:center; gap:18px; margin:22px 0 6px; }
+  .score-big { font-size:40px; font-weight:700; }
+  .tag { padding:5px 14px; border-radius:20px; font-weight:700; font-size:14px; }
+  .tag-clean { background:#16291e; color:var(--pass); }
+  .tag-caution { background:#3a1c1c; color:var(--fail); }
+  .tag-watch { background:#332b10; color:var(--warn); }
+  .tag-incomplete { background:#1c2028; color:var(--unknown); }
+  section { background:var(--card); border-radius:14px; padding:20px 22px; margin-top:18px;
+            border:1px solid #232733; }
+  h2 { font-size:16px; margin:0 0 14px; }
+  .check { display:flex; gap:14px; padding:12px 0; border-bottom:1px solid #1f242e; }
+  .check:last-child { border-bottom:0; }
+  .badge { min-width:64px; height:30px; display:flex; align-items:center; justify-content:center;
+           border-radius:8px; font-weight:700; font-size:13px; }
+  .verdict-pass .badge { background:#16291e; color:var(--pass); }
+  .verdict-fail .badge { background:#3a1c1c; color:var(--fail); }
+  .verdict-warn .badge { background:#332b10; color:var(--warn); }
+  .verdict-unknown .badge { background:#1c2028; color:var(--unknown); }
+  .check-label { font-weight:600; }
+  .check-detail { color:var(--muted); margin-top:2px; font-size:13.5px;
+                  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .check-why { color:#b9c0cc; margin-top:6px; font-size:13px; }
+  .check-why::before { content:"why: "; color:var(--muted); font-style:italic; }
+  .unknown-note { background:#332b10; /* reused warn tint */ border-radius:10px;
+                  padding:12px 16px; margin-top:16px; color:#f0e6c0; }
+  .market-note { color:var(--muted); font-size:13px; margin:0 0 12px; }
+  table.kv { width:100%; border-collapse:collapse; font-size:14px; }
+  table.kv td { padding:7px 4px; border-bottom:1px solid #1f242e; }
+  table.kv td:first-child { color:var(--muted); width:42%; }
+  footer { margin-top:26px; color:#555d6b; font-size:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>solguard — Token due-diligence report</h1>
+  <div class="addr">DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263</div>
+  <div class="score-row">
+    <div class="score-big">100<span style="font-size:18px;color:var(--muted)">/100</span></div>
+    <div class="tag tag-incomplete">INCOMPLETE</div>
+  </div>
+  <div class="unknown-note">⚠ 1 check(s) could not be verified and are marked <b>?</b> — they are <b>NOT scored as passed</b>. The picture is incomplete.</div>
+  <section>
+    <h2>Immutable on-chain checks</h2>
+    
+      <div class="check verdict-pass">
+        <span class="badge">PASS</span>
+        <div class="check-body">
+          <div class="check-label">Mint authority disabled</div>
+          <div class="check-detail">disabled</div>
+          <div class="check-why">A live mint authority lets the deployer mint unlimited new tokens at will, inflating supply against every existing holder. Most rugs are this vector. Revoked = good.</div>
+        </div>
+      </div>
+      <div class="check verdict-pass">
+        <span class="badge">PASS</span>
+        <div class="check-body">
+          <div class="check-label">Freeze authority disabled</div>
+          <div class="check-detail">disabled</div>
+          <div class="check-why">A live freeze authority can freeze YOUR holdings, making them untradeable at the deployer's discretion. Revoked = good.</div>
+        </div>
+      </div>
+      <div class="check verdict-pass">
+        <span class="badge">PASS</span>
+        <div class="check-body">
+          <div class="check-label">Supply is sane (>0)</div>
+          <div class="check-detail">circulating supply 8.79944e+13 (8799437952746060546 raw units)</div>
+          <div class="check-why">Supply must decode to something sane (> 0 and not absurdly tiny). A bizarre or zero supply suggests a malformed or manipulated contract.</div>
+        </div>
+      </div>
+      <div class="check verdict-unknown">
+        <span class="badge">?</span>
+        <div class="check-body">
+          <div class="check-label">Holder concentration (top-10)</div>
+          <div class="check-detail">could not verify (RPC throttled): getTokenLargestAccounts failed after 6 attempts: HTTP Error 429: Too Many Requests</div>
+          <div class="check-why">How much of the total supply sits in a few wallets. Above 60% in the top 10 risks a coordinated dump; above 30% is a concern.</div>
+        </div>
+      </div>
+  </section>
+  
+      <section>
+        <h2>Market depth (deepest pool)</h2>
+        <p class="market-note">Liquidity and volume are properties of the pool at
+        the size <em>you</em> intend to take, not an absolute good or bad. All
+        figures from orca via DexScreener.</p>
+        <table class="kv">
+          <tr><td>DEX / pair</td><td>orca</td></tr>
+          <tr><td>Price (USD)</td><td>$3.449e-06</td></tr>
+          <tr><td>Liquidity</td><td>$400,385</td></tr>
+          <tr><td>24h volume</td><td>$754,402</td></tr>
+          <tr><td>Market cap</td><td>$303,558,187</td></tr>
+          <tr><td>Fully-diluted valuation</td><td>$306,553,307</td></tr>
+        </table>
+      </section>
+  <footer>Generated by solguard · free public RPC · no paid API keys ·
+  verified on-chain facts only — checks that could not be verified are marked ?</footer>
+</div>
+</body>
+</html>
