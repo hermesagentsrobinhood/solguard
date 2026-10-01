@@ -65,6 +65,9 @@ JSON mode for scripting/agents:
 
 ```bash
 python -m solguard check <SOLANA_MINT> --json
+
+# Plain-language verdict -- same checks, human-readable prose
+python -m solguard explain <SOLANA_MINT>
 ```
 
 ## Portfolio / batch mode
@@ -143,6 +146,8 @@ Market (deepest pool on pumpswap):
 
 ## Roadmap (post-MVP)
 
+- [x] Plain-language verdict (`solguard explain <MINT>`) — translates the same
+      on-chain checks into a non-technical risk narrative for a judge/reader.
 - [~] Multiple free-RPC rotation with per-endpoint rate budgets for reliable
       holder data.
 - [x] Optional Helius/QuickNode RPC key support for high-throughput scans —

@@ -18,6 +18,7 @@ from .market import best_solana_pair
 from .report import render_html
 from .risk import run_rug_checks
 from .summarize import render_table, summarize
+from .explain import explain
 
 
 def render_checks(checks: list[dict]) -> str:
@@ -113,6 +114,18 @@ def cmd_batch(args) -> int:
     return 0
 
 
+def cmd_explain(args) -> int:
+    """Run the due-diligence checks and render a plain-language verdict."""
+    try:
+        risk = run_rug_checks(args.mint, args.rpc)
+    except (RpcError, ValueError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
+    market = best_solana_pair(args.mint)
+    print(explain(risk, market=market))
+    return 0
+
+
 def main() -> int:
     p = argparse.ArgumentParser(prog="solguard", description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -123,6 +136,10 @@ def main() -> int:
     c.add_argument("--html", metavar="FILE", default=None,
                    help="write a self-contained HTML report to FILE")
     c.set_defaults(fn=cmd_check)
+    e = sub.add_parser("explain", help="plain-language verdict for a mint")
+    e.add_argument("mint", help="Solana SPL token mint address")
+    e.add_argument("--rpc", default=None, help="override RPC URL")
+    e.set_defaults(fn=cmd_explain)
     b = sub.add_parser("batch", help="run due-diligence on many mints (portfolio view)")
     b.add_argument("mints", nargs="*", help="one or more mint addresses")
     b.add_argument("--file", default=None, help="file of mints, one per line (# = comment)")
