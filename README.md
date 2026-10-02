@@ -52,6 +52,24 @@ does *not* rank venue risk badges — they're one more unverified claim.
 Market liquidity (via DexScreener) is reported as a *property of the pool at the
 size you intend to take*, not an absolute good or bad.
 
+## One-command judge demo (Docker)
+
+No Python, no `pip`, no paid keys on your machine — the whole tool ships in an
+image that runs a real on-chain check from your terminal:
+
+```bash
+docker build -t solguard .
+# live explain — BONK mainnet (authorities revoked, clean) :
+docker run --rm solguard explain DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263
+# live explain — USDC mainnet (mint+freeze authority LIVE -> CAUTION) :
+docker run --rm solguard explain EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+# or a `make demo-bonk` / `make demo-usdc` / `make demo-batch` shortcut.
+```
+
+Verified working end-to-end this cycle (real mainnet call through the container).
+The image also installs an unprivileged `solguard` user — it only makes public,
+read-only RPC + DexScreener calls.
+
 ## Install & run
 
 ```bash
